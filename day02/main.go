@@ -22,10 +22,10 @@ func main() {
 	ans1 := FirstTaskDay02(filePath)
 	fmt.Println("First task:")
 	fmt.Println(ans1)
-	// fmt.Println("=======================Task2=======================")
-	// ans2 := SecondTaskDay02(filePath)
-	// fmt.Println("Second task:")
-	// fmt.Println(ans2)
+	fmt.Println("=======================Task2=======================")
+	ans2 := SecondTaskDay02(filePath)
+	fmt.Println("Second task:")
+	fmt.Println(ans2)
 
 }
 
@@ -37,6 +37,30 @@ func FirstTaskDay02(path string) int {
 	count := 0
 
 	for _, rep := range repots {
+		CheckIfSafe(&rep, rep.Content)
+		if rep.IsSafe {
+			count++
+		}
+	}
+
+	return count
+}
+func SecondTaskDay02(path string) int {
+	repots, err := ParseInputToReports(path)
+	if err != nil {
+		panic(err)
+	}
+	count := 0
+
+	for _, rep := range repots {
+		for i := range rep.Content {
+			sliceWithoutOneElement := RemoveSingelElementByIndex(rep.Content, i)
+			CheckIfSafe(&rep, sliceWithoutOneElement)
+			if rep.IsSafe {
+
+				break
+			}
+		}
 		if rep.IsSafe {
 			count++
 		}
@@ -67,42 +91,41 @@ func ParseInputToReports(filePath string) (reports []Report, err error) {
 			reportDataAsInt = append(reportDataAsInt, data)
 		}
 		rep := Report{Content: reportDataAsInt}
-		rep.CheckIfSafe()
 		reports = append(reports, rep)
 	}
 	return reports, nil
 }
 
-func (r *Report) CheckIfSafe() {
-	if len(r.Content) < 1 {
+func CheckIfSafe(r *Report, checkedSlice []int) {
+	if len(checkedSlice) < 1 {
 		fmt.Println(r)
 		fmt.Println("Report empty")
 		return
 	}
-	if len(r.Content) < 2 {
+	if len(checkedSlice) < 2 {
 		fmt.Println("Only one record")
 		r.IsSafe = true
 		return
 	}
 	maxChange := 3
 	var checkingIncrease bool
-	if (r.Content[0] - r.Content[1]) > 0 {
+	if (checkedSlice[0] - checkedSlice[1]) > 0 {
 		checkingIncrease = false
 	}
-	if (r.Content[0] - r.Content[1]) < 0 {
+	if (checkedSlice[0] - checkedSlice[1]) < 0 {
 		checkingIncrease = true
 	}
-	if (r.Content[0] - r.Content[1]) == 0 {
-		fmt.Println("Report is unsafe, no increase or decrease")
-		r.IsSafe = false
+	if (checkedSlice[0] - checkedSlice[1]) == 0 {
+		// fmt.Println("Report is unsafe, no increase or decrease")
+		// r.IsSafe = false
 		return
 	}
 
 	if checkingIncrease {
-		for i := 0; i < len(r.Content)-1; i++ {
-			dif := r.Content[i+1] - r.Content[i]
+		for i := 0; i < len(checkedSlice)-1; i++ {
+			dif := checkedSlice[i+1] - checkedSlice[i]
 			if dif < 1 || dif > maxChange {
-				r.IsSafe = false
+				// r.IsSafe = false
 				return
 			}
 		}
@@ -110,10 +133,10 @@ func (r *Report) CheckIfSafe() {
 		r.IsSafe = true
 
 	} else {
-		for i := 0; i < len(r.Content)-1; i++ {
-			dif := r.Content[i+1] - r.Content[i]
+		for i := 0; i < len(checkedSlice)-1; i++ {
+			dif := checkedSlice[i+1] - checkedSlice[i]
 			if dif < -maxChange || dif > -1 {
-				r.IsSafe = false
+				// r.IsSafe = false
 				return
 			}
 		}
@@ -121,4 +144,10 @@ func (r *Report) CheckIfSafe() {
 		r.IsSafe = true
 	}
 
+}
+func RemoveSingelElementByIndex(slice []int, s int) []int {
+	newSlice := []int{}
+	newSlice = append(newSlice, slice[:s]...)
+	newSlice = append(newSlice, slice[s+1:]...)
+	return newSlice
 }
