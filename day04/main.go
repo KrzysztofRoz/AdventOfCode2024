@@ -41,15 +41,16 @@ func main() {
 	ans1 := FirstTaskDay04(filePath)
 	fmt.Println("First task:")
 	fmt.Println(ans1)
-	// fmt.Println("=======================Task2=======================")
-	// ans2 := SecondTaskDay04(filePath)
-	// fmt.Println("Second task:")
-	// fmt.Println(ans2)
+	fmt.Println("=======================Task2=======================")
+	ans2 := SecondTaskDay04(filePath)
+	fmt.Println("Second task:")
+	fmt.Println(ans2)
 
 }
 
+// First part solution
 func FirstTaskDay04(path string) int {
-	text, xpos, err := ParseInput(path)
+	text, xpos, err := ParseInputForXMAS(path)
 	if err != nil {
 		log.Fatal(err)
 		panic(err)
@@ -63,7 +64,7 @@ func FirstTaskDay04(path string) int {
 	return count
 }
 
-func ParseInput(filePath string) ([][]string, []Position, error) {
+func ParseInputForXMAS(filePath string) ([][]string, []Position, error) {
 
 	textMatrix := make([][]string, 0)
 	xPosition := []Position{}
@@ -93,13 +94,13 @@ func SearchXMAS(xs []Position, text [][]string) (count int, err error) {
 
 	count = 0
 	for _, xpos := range xs {
-		count += CheckWord(xpos, word, text)
+		count += CheckXMASWord(xpos, word, text)
 	}
 
 	return count, err
 }
 
-func CheckWord(xpos Position, word string, text [][]string) int {
+func CheckXMASWord(xpos Position, word string, text [][]string) int {
 	hight := len(text)
 	width := len(text[0])
 	wordLength := len(word) - 1 //sub one beacouse we already got one letter X
@@ -180,4 +181,98 @@ func CheckWord(xpos Position, word string, text [][]string) int {
 	}
 
 	return count
+}
+
+// Solution for second part
+
+func SecondTaskDay04(path string) int {
+	text, apos, err := ParseInputForMAS(path)
+	if err != nil {
+		log.Fatal(err)
+		panic(err)
+	}
+	count, err := SearchMAS(apos, text)
+	if err != nil {
+		log.Fatal(err)
+		panic(err)
+	}
+
+	return count
+}
+
+func ParseInputForMAS(filePath string) ([][]string, []Position, error) {
+
+	textMatrix := make([][]string, 0)
+	aPosition := []Position{}
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Fatal(err)
+		return textMatrix, aPosition, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	count := 0
+	for scanner.Scan() {
+		letters := strings.Split(scanner.Text(), "")
+		textMatrix = append(textMatrix, letters)
+		for i, letter := range letters {
+			if letter == "A" {
+				aPosition = append(aPosition, Position{X: i, Y: count}) //Get all A coordinates for faster word search
+			}
+		}
+		count++
+	}
+	return textMatrix, aPosition, nil
+}
+func SearchMAS(as []Position, text [][]string) (count int, err error) {
+	word := "MAS"
+
+	count = 0
+	for _, apos := range as {
+		count += CheckMASWord(apos, word, text)
+	}
+
+	return count, err
+}
+
+func CheckMASWord(apos Position, word string, text [][]string) int {
+	hight := len(text)
+	width := len(text[0])
+
+	count := 0
+
+	if apos.X-1 >= 0 && apos.X+1 < width && apos.Y-1 >= 0 && apos.Y+1 < hight {
+		var diagWord1 string
+		var diagWord2 string
+		var builder strings.Builder
+
+		// from up to down word
+		builder.WriteString(Position{Y: apos.Y - 1, X: apos.X - 1}.GetLetter(text))
+		builder.WriteString(apos.GetLetter(text))
+		builder.WriteString(Position{Y: apos.Y + 1, X: apos.X + 1}.GetLetter(text))
+
+		diagWord1 = builder.String()
+
+		if diagWord1 == "MAS" || reverse(diagWord1) == "MAS" {
+			// from down to up word
+			builder = strings.Builder{}
+			builder.WriteString(Position{Y: apos.Y + 1, X: apos.X - 1}.GetLetter(text))
+			builder.WriteString(apos.GetLetter(text))
+			builder.WriteString(Position{Y: apos.Y - 1, X: apos.X + 1}.GetLetter(text))
+			diagWord2 = builder.String()
+			if diagWord2 == "MAS" || reverse(diagWord2) == "MAS" {
+				count++
+			}
+		}
+	}
+
+	return count
+}
+
+func reverse(str string) (result string) {
+	for _, v := range str {
+		result = string(v) + result
+	}
+	return
 }
